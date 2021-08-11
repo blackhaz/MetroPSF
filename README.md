@@ -7,4 +7,4 @@ MetroPSF can perform blind astrometric calibration of images via Astrometry.net 
 
 The program is developed using Python’s standard Tkinter graphical user interface and relies on a rather conservative subset of astronomical and data processing libraries to work that are typically well-maintained. The program is currently in the stage of a working prototype that requires further development and code refactoring. Feedback and suggestions are very welcome. MetroPSF is conﬁrmed to work on Windows, Linux and FreeBSD operating systems and is, in principle, compatible with all operating systems capable of installing Python and the Astropy package for astronomy (Astropy Collaboration et al., 2013, 2018).
 
-For full documentation, please refer to the included metropsf.pdf file. 
+For full documentation, please refer to the included doc/metropsf.pdf file. 
