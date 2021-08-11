@@ -1570,7 +1570,7 @@ class MyGUI:
         self.settings_frame.grid(row=2, column=0, sticky=tk.NSEW)  # Settings_frame under the canvas in the right_frame
         tk.Grid.columnconfigure(self.settings_frame, 0, weight=1)  # Expand settings_frame column that holds labels
 
-        settings_entry_width = 6
+        settings_entry_width = 16
         extended_settings_entry_width = 30
 
         row = 0
@@ -1724,48 +1724,6 @@ class MyGUI:
         self.height_label.grid(row=row, column=0, stick=tk.W)
         self.height_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
         self.height_entry.grid(row=row, column=1, sticky=tk.E)
-        row = row + 1
-
-        self.cod_label = tk.Label(self.settings_frame, text="COD Observatory Code:")
-        self.cod_label.grid(row=row, column=0, stick=tk.W)
-        self.cod_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.cod_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.con_label = tk.Label(self.settings_frame, text="CON Contact:")
-        self.con_label.grid(row=row, column=0, stick=tk.W)
-        self.con_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.con_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.obs_label = tk.Label(self.settings_frame, text="OBS Observers:")
-        self.obs_label.grid(row=row, column=0, stick=tk.W)
-        self.obs_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.obs_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.mea_label = tk.Label(self.settings_frame, text="MEA Measurers:")
-        self.mea_label.grid(row=row, column=0, stick=tk.W)
-        self.mea_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.mea_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.com2_label = tk.Label(self.settings_frame, text="COM Address:")
-        self.com2_label.grid(row=row, column=0, stick=tk.W)
-        self.com2_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.com2_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.com3_label = tk.Label(self.settings_frame, text="COM Observatory and Site Name:")
-        self.com3_label.grid(row=row, column=0, stick=tk.W)
-        self.com3_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.com3_entry.grid(row=row, column=1, sticky=tk.EW)
-        row = row + 1
-
-        self.ac2_label = tk.Label(self.settings_frame, text="AC2 E-mail:")
-        self.ac2_label.grid(row=row, column=0, stick=tk.W)
-        self.ac2_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width, background='pink')
-        self.ac2_entry.grid(row=row, column=1, sticky=tk.EW)
         row = row + 1
 
         self.telescope_label = tk.Label(self.settings_frame, text="Telescope:")
