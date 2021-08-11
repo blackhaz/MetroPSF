@@ -1,0 +1,42 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Installation}{}% 2
+\BOOKMARK [1][-]{section.3}{Quick Start}{}% 3
+\BOOKMARK [1][-]{section.4}{Functionality}{}% 4
+\BOOKMARK [2][-]{subsection.4.1}{File Menu}{section.4}% 5
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Open, Save and Save As}{subsection.4.1}% 6
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Load Settings, Save Settings As}{subsection.4.1}% 7
+\BOOKMARK [2][-]{subsection.4.2}{View Menu}{section.4}% 8
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Next VSX Source}{subsection.4.2}% 9
+\BOOKMARK [2][-]{subsection.4.3}{Photometry Menu}{section.4}% 10
+\BOOKMARK [3][-]{subsubsection.4.3.1}{Iteratively Subtracted PSF Photometry}{subsection.4.3}% 11
+\BOOKMARK [3][-]{subsubsection.4.3.2}{Aperture Photometry}{subsection.4.3}% 12
+\BOOKMARK [3][-]{subsubsection.4.3.3}{Plot and Hide}{subsection.4.3}% 13
+\BOOKMARK [3][-]{subsubsection.4.3.4}{Solve Image}{subsection.4.3}% 14
+\BOOKMARK [3][-]{subsubsection.4.3.5}{Get Comparison Stars}{subsection.4.3}% 15
+\BOOKMARK [3][-]{subsubsection.4.3.6}{Find Regression Model}{subsection.4.3}% 16
+\BOOKMARK [3][-]{subsubsection.4.3.7}{Remove Fit Outlier}{subsection.4.3}% 17
+\BOOKMARK [3][-]{subsubsection.4.3.8}{Remove Fit Outliers Until Ensemble Limit}{subsection.4.3}% 18
+\BOOKMARK [3][-]{subsubsection.4.3.9}{Remove Fit Outliers Beyond Separation Limit}{subsection.4.3}% 19
+\BOOKMARK [3][-]{subsubsection.4.3.10}{Reset Fit Outliers}{subsection.4.3}% 20
+\BOOKMARK [3][-]{subsubsection.4.3.11}{Delete Photometry File}{subsection.4.3}% 21
+\BOOKMARK [3][-]{subsubsection.4.3.12}{Display Background Image}{subsection.4.3}% 22
+\BOOKMARK [2][-]{subsection.4.4}{Report Menu}{section.4}% 23
+\BOOKMARK [3][-]{subsubsection.4.4.1}{BAA: Generate Report}{subsection.4.4}% 24
+\BOOKMARK [3][-]{subsubsection.4.4.2}{BAA/AAVSO: Reports on All VSX Sources}{subsection.4.4}% 25
+\BOOKMARK [3][-]{subsubsection.4.4.3}{BAA/AAVSO: Batch Reports on All VSX Sources}{subsection.4.4}% 26
+\BOOKMARK [3][-]{subsubsection.4.4.4}{BAA: Light Curve from Reports}{subsection.4.4}% 27
+\BOOKMARK [3][-]{subsubsection.4.4.5}{AAVSO: Generate Report}{subsection.4.4}% 28
+\BOOKMARK [2][-]{subsection.4.5}{Miscellaneous Functions}{section.4}% 29
+\BOOKMARK [3][-]{subsubsection.4.5.1}{Report VSX Sources Nearby}{subsection.4.5}% 30
+\BOOKMARK [3][-]{subsubsection.4.5.2}{Image Stretching}{subsection.4.5}% 31
+\BOOKMARK [2][-]{subsection.4.6}{Operation from Command Line}{section.4}% 32
+\BOOKMARK [1][-]{section.5}{Acknowledgement}{}% 33
+\BOOKMARK [1][-]{section.6}{Change Log}{}% 34
+\BOOKMARK [2][-]{subsection.6.1}{Version 0.16}{section.6}% 35
+\BOOKMARK [2][-]{subsection.6.2}{Version 0.15}{section.6}% 36
+\BOOKMARK [2][-]{subsection.6.3}{Version 0.14}{section.6}% 37
+\BOOKMARK [2][-]{subsection.6.4}{Version 0.13}{section.6}% 38
+\BOOKMARK [2][-]{subsection.6.5}{Version 0.12}{section.6}% 39
+\BOOKMARK [2][-]{subsection.6.6}{Version 0.11}{section.6}% 40
+\BOOKMARK [1][-]{section.7}{Known Issues}{}% 41
+\BOOKMARK [1][-]{section.8}{License Information}{}% 42

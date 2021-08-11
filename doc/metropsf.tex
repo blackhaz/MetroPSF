@@ -1,0 +1,387 @@
+\documentclass{article}
+\usepackage{natbib,graphicx,amsmath,mathtools,pgfplots}
+\usepackage{lipsum}
+\usepackage{multirow, bigdelim}
+\usepackage{hyperref, courier}
+
+\usepackage{latexsym}% 
+\usepackage{graphicx}% 
+\usepackage{amssymb}% 
+\usepackage{longtable}% 
+\usepackage{authblk}
+\usepackage{threeparttable}
+\usepackage{booktabs,caption}
+
+\usepackage{geometry}                       % See geometry.pdf to learn the layout options. There are lots.
+\geometry{a4paper}    
+\usepackage{rotate}
+\usepackage{rotating}
+\usepackage{pdflscape}          %landscape single pages
+
+\newcommand\arcdeg{\mbox{$^\circ$}}% 
+\newcommand\arcmin{\mbox{$^\prime$}}% 
+\newcommand\arcsec{\mbox{$^{\prime\prime}$}}% 
+\newcommand\aj{{AJ}}%        % Astronomical Journal 
+\newcommand\araa{{ARA\&A}}%  % Annual Review of Astron and Astrophys 
+\newcommand\apj{{ApJ}}%    % Astrophysical Journal 
+\newcommand\apjl{{ApJ}}%     % Astrophysical Journal, Letters 
+\newcommand\apjs{{ApJS}}%    % Astrophysical Journal, Supplement 
+\newcommand\ao{{Appl.~Opt.}}%   % Applied Optics 
+\newcommand\apss{{Ap\&SS}}%  % Astrophysics and Space Science 
+\newcommand\aap{{A\&A}}%     % Astronomy and Astrophysics 
+\newcommand\aapr{{A\&A~Rev.}}%  % Astronomy and Astrophysics Reviews 
+\newcommand\aaps{{A\&AS}}%    % Astronomy and Astrophysics, Supplement 
+\newcommand\azh{{AZh}}%       % Astronomicheskii Zhurnal 
+\newcommand\baas{{BAAS}}%     % Bulletin of the AAS 
+\newcommand\icarus{{Icarus}}% % Icarus
+\newcommand\jrasc{{JRASC}}%   % Journal of the RAS of Canada 
+\newcommand\memras{{MmRAS}}%  % Memoirs of the RAS 
+\newcommand\mnras{{MNRAS}}%   % Monthly Notices of the RAS 
+\newcommand\pra{{Phys.~Rev.~A}}% % Physical Review A: General Physics 
+\newcommand\prb{{Phys.~Rev.~B}}% % Physical Review B: Solid State 
+\newcommand\prc{{Phys.~Rev.~C}}% % Physical Review C 
+\newcommand\prd{{Phys.~Rev.~D}}% % Physical Review D 
+\newcommand\pre{{Phys.~Rev.~E}}% % Physical Review E 
+\newcommand\prl{{Phys.~Rev.~Lett.}}% % Physical Review Letters 
+\newcommand\pasp{{PASP}}%     % Publications of the ASP 
+\newcommand\pasj{{PASJ}}%     % Publications of the ASJ 
+\newcommand\qjras{{QJRAS}}%   % Quarterly Journal of the RAS 
+\newcommand\skytel{{S\&T}}%   % Sky and Telescope 
+\newcommand\solphys{{Sol.~Phys.}}% % Solar Physics 
+\newcommand\sovast{{Soviet~Ast.}}% % Soviet Astronomy 
+\newcommand\ssr{{Space~Sci.~Rev.}}% % Space Science Reviews 
+\newcommand\zap{{ZAp}}%       % Zeitschrift fuer Astrophysik 
+\newcommand\nat{{Nature}}%  % Nature 
+\newcommand\iaucirc{{IAU~Circ.}}% % IAU Cirulars 
+\newcommand\aplett{{Astrophys.~Lett.}}%  % Astrophysics Letters 
+\newcommand\apspr{{Astrophys.~Space~Phys.~Res.}}% % Astrophysics Space Physics Research 
+\newcommand\bain{{Bull.~Astron.~Inst.~Netherlands}}% % Bulletin Astronomical Institute of the Netherlands 
+\newcommand\fcp{{Fund.~Cosmic~Phys.}}%   % Fundamental Cosmic Physics 
+\newcommand\gca{{Geochim.~Cosmochim.~Acta}}% % Geochimica Cosmochimica Acta 
+\newcommand\grl{{Geophys.~Res.~Lett.}}%  % Geophysics Research Letters 
+\newcommand\jcp{{J.~Chem.~Phys.}}%     % Journal of Chemical Physics 
+\newcommand\jgr{{J.~Geophys.~Res.}}%     % Journal of Geophysics Research 
+\newcommand\jqsrt{{J.~Quant.~Spec.~Radiat.~Transf.}}%   % Journal of Quantitiative Spectroscopy and Radiative Trasfer 
+\newcommand\memsai{{Mem.~Soc.~Astron.~Italiana}}% % Mem. Societa Astronomica Italiana 
+\newcommand\nphysa{{Nucl.~Phys.~A}}%     % Nuclear Physics A 
+\newcommand\physrep{{Phys.~Rep.}}%       % Physics Reports 
+\newcommand\physscr{{Phys.~Scr}}%        % Physica Scripta 
+\newcommand\planss{{Planet.~Space~Sci.}}%  % Planetary Space Science 
+\newcommand\procspie{{Proc.~SPIE}}%      % Proceedings of the SPIE 
+
+\newcommand\actaa{{Acta Astron.}}%  % Acta Astronomica
+\newcommand\caa{{Chinese Astron. Astrophys.}}%  % Chinese Astronomy and Astrophysics
+\newcommand\cjaa{{Chinese J. Astron. Astrophys.}}%  % Chinese Journal of Astronomy and Astrophysics
+\newcommand\jcap{{J. Cosmology Astropart. Phys.}}%  % Journal of Cosmology and Astroparticle Physics
+\newcommand\na{{New A}}%  % New Astronomy
+\newcommand\nar{{New A Rev.}}%  % New Astronomy Review
+\newcommand\pasa{{PASA}}%  % Publications of the Astron. <Soc. of Australia
+\newcommand\rmxaa{{Rev. Mexicana Astron. Astrofis.}}%  % Revista Mexicana de Astronomia y Astrofisica
+
+
+
+\def\HI{H\;{\sc i}}
+\def\HII{H\;{\sc ii}}
+
+\begin{document}
+\title{MetroPSF 0.16}
+\author{M. Usatov}
+\affil{maxim.usatov@bcsatellite.net}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction} \label{intro}
+\textsc{MetroPSF} is an open source astronomical photometry program. It's goal is providing a convenient and intuitive graphical user interface to algorithms implemented in \textsc{photutils} \citep{larry_bradley_2020_4044744}, in particular iteratively subtracted point spread function (PSF) photometry---a variant of the \textsc{DAOPHOT} algorithm by \citet{1987PASP...99..191S} for PSF photometry in crowded fields, and aperture photometry. 
+
+\textsc{MetroPSF} can perform blind astrometric calibration of images via Astrometry.net service \citep{2010AJ....139.1782L}, request comparison photometry data from various catalogs in VizieR \citep{2000A&AS..143...23O}, match sources and perform differential photometry via linear regression fits to a weighted ensemble of sources. Such differential ensemble photometry method is described by \citet{2010JAVSO..38..202P}. It can also generate photometry reports compliant with British Astronomy Association's (BAA) Photometry Database and American Association of Variable Star Observers (AAVSO) submission guidelines, as well as process multiple FITS files in batch mode and report on all VSX sources found. It can generate light curves from individual report files produced. 
+
+The program is developed using \textsc{Python}'s standard \textsc{Tkinter} graphical user interface and relies on a rather conservative subset of astronomical and data processing libraries to work that are typically well-maintained. The program is currently in the stage of a working prototype that requires further development and code refactoring. Feedback and suggestions are very welcome. \textsc{MetroPSF} is confirmed to work on Windows, Linux and FreeBSD operating systems and is, in principle, compatible with all operating systems capable of installing \textsc{Python} and the \textsc{Astropy},\footnote{http://www.astropy.org} package for astronomy \citep{astropy:2013, astropy:2018}. 
+
+\section{Installation} \label{installation}
+The \textsc{MetroPSF} distribution archive holds a single Python file with the program and the \texttt{requirements.txt} file to automate library installation. The installation steps are as following:
+
+\begin{enumerate}
+\item Install \textsc{Python} language interpreter from \url{https://www.python.org/downloads/}. For full memory access, 64-bit version is recommended. Unix-like operating systems may require installation via OS's package or ports manager. 
+\item Extract the \textsc{MetroPSF} distribution archive.
+\item Run \texttt{pip install -r requirements.txt} command in the folder with \textsc{MetroPSF} files. This will automatically install all the required libraries. 
+\end{enumerate}
+Now you are ready to run \textsc{MetroPSF}. On Windows, double click on the program file. On Unix-like systems you may need to run it via \texttt{python} shell command. 
+
+\section{Quick Start} \label{quickstart}
+A simple photometry workflow in \textsc{MetroPSF} can be described as following:
+\begin{enumerate}
+\item Load your FITS data using the File / Open menu. 
+\item Adjust PSF fitting width and height and full-width at half-maximum (FWHM) in the left-side panel. Provide your best estimates for the data. The rectangular fitting shape should contain stellar images of target magnitude. 
+\item Double-check CCD filter and exposure time are set correctly in the left-side panel. These are taken automatically from the FITS header when present. 
+\item In the Photometry menu, select Iteratively Subtracted PSF Photometry. This performs background extraction, source location, Gaussian PSF fitting and flux determination. Photometry results with instrumental magnitudes are then saved in a file with the \texttt{.phot} extension added to the file name of the FITS data. 
+\item If your image does not have astrometic calibration, in the Photometry menu, select Solve Image. After solving you may want to save your FITS to preserve the World Coordinate System (WCS) header data. 
+\item In the Photometry menu, select Get Comparison Stars. This submits a request to the VizieR to download data for all the sources within the field of view, in the set filter. The sources obtained are matched automatically to those detected in the image in order to create a comparison ensemble. The matching radius is set in the left panel, by default equals 2\arcsec.  
+\item Finally, in the Photometry menu, select Find Regression Model to build a linear regression fit to the ensemble. This allows to derive differential magnitudes from instrumental magnitudes. The linear regression fit is plotted in the right-side panel. 
+\end{enumerate}
+At this step, the photometry process is, in principle, complete. You can click on the sources detected in the image to obtain differential magnitudes, uncertainities and information on any matches with the selected VizieR catalog. Of course, real photometry will require adjustment of various parameters to fit seeing conditions, data and the nature of sources.
+
+Note that filling pink input fields in the \textsc{MetroPSF} interface are required only for report generation, such as described in \S \ref{baa}. They can be left empty if report generation is not intended.
+
+\section{Functionality} \label{functionality}
+\subsection{File Menu}
+\subsubsection{Open, Save and Save As}
+This menu allows to open and save FITS files with images. Saving the file also saves FITS header currently in memory. WCS header data after the image is solved is appended to the existing header. The FITS Crop setting in the left panel allows to crop the frame on loading to the central portion, e.g. a setting of 50\% will crop to half of the original width and height, centered. This allows to speed up processing assuming the frame is centered on the object of interest.
+\subsubsection{Load Settings, Save Settings As}
+For user convenience, it is possible to save \textsc{MetroPSF} session settings to an external file and load them later. Saved settings include all visible fields except CCD Filter and Exposure Start, which are pre-filled automatically when a FITS file is loaded; and Image Stretching settings for histogram stretching in the right panel, which are generally adjusted each time to a particular data. 
+\subsection{View Menu}
+The view menu allows to Update the current view with the plot of the FITS data and overlaid photometry results, if available. Zoom items adjust the current view. Note histogram stretch sliders are available in the right panel to adjust the view of the data.
+\subsubsection{Next VSX Source}
+This menu compares the object name entered in the left panel with the list of the VSX sources identified in the field, selects the next VSX source and centers the view on it. This allows to quickly iterate through all variable sources identified in the data.
+\subsection{Photometry Menu}
+\subsubsection{Iteratively Subtracted PSF Photometry}
+Performs the Iteratively Subtracted PSF Photometry procedure from \textsc{photutils}. This is a variant of the \textsc{DAOPHOT} algorithm described by \citet{1987PASP...99..191S} for PSF photometry in crowded fields. First, sources are found in the data via the IRAF's \textsc{StarFinder} algorithm using a 2-dimensional circular Gaussian kernel to approximate PSFs. Local density maxima are searched for exceeding 	the threshold set in the Star Detection Threshold field in the left panel, above sky background. Overdensities at this step are expected to have PSF FWHM roughly similiar to the FWHM input in the left panel. Objects are expected to be sharper than the Lower Bound for Sharpness setting, which is by default set to 0.5 to avoid hot pixels. This setting can be lowered to detect sources with sharper response.
+
+Next, a 2-dimensional low-resolution sky background map is constructed using the \textsc{Background2D} class in \textsc{photutils}. Sigma clipping with $\sigma = 3.0$ is used at this step. The low-resolution background map is then filtered via median filter and, finally, interpolated to the full image size. The median filter size is specified in the Background Median Filter setting in the left panel. The filter by default is set to 1 which means no filtering. 
+
+Finally, PSF photometry is performed on an image and sources detected, with sky background map subtracted first from the raw image. A 2D circular Gaussian model with variable $\sigma$ is used for fitting. The PSF fitting is done for the amount of iterations specified in the Photometry Iterations setting in the left panel. The fitting is done using a box shape with side dimension specifed in the Fitting Width/Height setting. The PSF fitting algorithm can be changed in the right panel. By default it is set to Levenberg-Marquardt and the least squares statistic.
+
+Once photometry process is complete, the photometry results table is formed with x, y pixel centroids and fitted flux in ADU and instrumental magnitude per each source. All detected sources are marked with grey circles on the view. The photometry table is saved to the same file name as the FITS data with the addition of \texttt{.phot} extension. 
+
+\subsubsection{Aperture Photometry}
+Performs aperture photometry procedure from \textsc{photutils}. First, sources are found in the data via the IRAF's \textsc{StarFinder} algorithm using a 2-dimensional circular Gaussian kernel to approximate PSFs. Next, a 2-dimensional low-resolution sky background map is constructed. These steps are identical to the iteratively subtracted PSF photometry described in the section above. 
+
+Aperture photometry is performed on sky background-subtracted image with circular aperture of radius set in Fitting Width/Height input in the left panel, and flux uncertainty is estimated that includes background and Poisson noise, as described in \textsc{photutils} documentation: 
+
+\begin{equation}
+\Delta F = \sqrt{\sum_{i \in A} \sigma_p^2,i},
+\end{equation}
+
+where $A$ are the pixels in aperture and $\sigma_p$ is the photometry error, defined as 
+
+\begin{equation}
+\sigma_p = \sqrt{\sigma_{bkg}^2 + \frac{I}{g_{eff}}}, 
+\end{equation}
+
+where $\sigma_{bkg}$ is the extracted background RMS, $I$ is the data image, and $g_{eff}$ is the camera gain in ADU/$e^-$. 
+
+Photometry results table with instrumental magnitude per each source. All detected sources are marked with grey circles on the view. The photometry table is saved to the same file name as the FITS data with the addition of \texttt{.phot} extension. 
+
+\subsubsection{Plot and Hide}
+These items allow to plot and hide photometry results. When photometry is plotted, it is read from the \texttt{.phot} file each time. All detected sources are shown in grey, while sources having catalog matches are shown in green, and those having matches in the AAVSO The International Variable Star Index (VSX) catalog \citep{2006SASS...25...47W} database are shown in yellow. Stars-outliers that are removed from the ensemble are shown in red.
+
+\subsubsection{Solve Image}
+Obtains blind astrometric calibration of the current image via Astrometry.net service. No input or initial guess is required. A list of sources from the photometry results table is sorted by flux with brightest sources first, and the list submitted to the Astrometry.net server. A solution is obtained and converted to WCS header which is then used to convert image pixel coordinates to celestial coordinates. 
+
+By default, \texttt{nova.astrometry.net} is set as the server, however, you can use a local copy of the Astrometry.net service for this purpose.  The Linux Docker container provided by dm90\footnote{\url{https://github.com/dam90/astrometry}} is working well for this purpose with very little configuration required out-of-the-box. Please note that a port number is likely required in the URL field in the left pane to use a non-standard server, e.g. \texttt{127.0.0.1:8000}.
+
+\subsubsection{Get Comparison Stars}
+Retreives a list of stars in the field of view from the catalog specified in the Comparison Catalog in the right panel. By default the AAVSO Photometric All Sky Survey (APASS) DR9 catalog \citep{2015AAS...22533616H} is used. \textsc{MetroPSF} can also work with the Gaia DR2 \citep{2018A&A...616A...1G}, the First U.S. Naval Observatory Robotic Astrometric Telescope URAT1 \citep{2015AJ....150..101Z} and the USNO-B1.0 catalogs \citep{2003AJ....125..984M}. It is also possible to specify a custom VizieR catalog\footnote{A list of catalogs in VizieR can be obtained from \url{http://cdsarc.u-strasbg.fr/cats/cats.html}} by selecting VizieR Catalog in the Comparison Catalog setting. For example, for The SDSS Photometric Catalog, Release 8 \citep{2011yCat.2306....0A}, enter ``II/306'' in the Vizier Catalog Number input field. It is assumed that VizieR provides coordinates via RAJ2000 and DEJ2000 columns in custom catalogs.
+
+Sources found in the originial data with catalog matches are shown in green, and those without matches, in grey. The matching radius used in this procedure is set in the left panel, by default set to 2\arcsec. Note that \textsc{MetroPSF} searches for catalog magnitudes using the filter string specified in the CCD Filter setting in the left panel. For example, with ``V'' as the input, \textsc{MetroPSF} will search for ``Vmag'' in the VizieR catalog. The CCD Filter setting is pre-filled automatically when the FITS file is loaded, but if the filter information is inaccurate or not present it is possible to specify the filter manually.
+
+\subsubsection{Find Regression Model}
+With photometry table containing magnitudes from a matching catalog, it is now possible to do a linear regression fit to derive conversion parameters between instrumental and differential magnitudes. The minimum and maximum ensemble magnitudes are specified in the corresponding settings in the left panel. 
+
+Ensemble weighting is specified in the right panel, which is by default set to use no weighting. With Raw Flux weighting, comparison mangitudes will be weighed proportionally to the measured source flux in the original FITS data at the coordinate centroid reported by the PSF fitting algorithm. Instrumental magnitude weighting will introduce weights into the fit equal to the inverse magnitudes from the photometry table. PSF $\sigma$ weighting uses inverse of the fitted PSF $\sigma$. 
+
+It is possible to exclude stars from the AAVSO VSX catalog by selecting Ignore VSX Sources in Ensemble in the right panel. Note that stars with matching VSX object are plotted with yellow circles. 
+
+The photometry ensemble can be limited to a certain number of stars via the Limite Ensemble to setting in the left panel. This works only when a weighting option is selected. For example, with instrumental magnitudes selected as a weighting factor, only $n$ brightest stars will be selected for the ensemble. By default the limit is set to $n=1000$ and can be set to an arbitrarily high number, if desired, to include all stars into the ensemble. 
+
+Once the fit is done, it is plotted on the right panel. The $n$ text overlay shows the number of stars in the current ensemble. Linear regression coefficients and the fit's coefficient of determination, $r^2$, are reported in the console to analyze its goodness. The photometry results table (the \texttt{.phot} file) is automatically updated with differential magnitudes and errors. With the new data now it is possible to click on sources in the image and obtain differential magnitudes and uncertainites. 
+%Following \citet{1991PASP..103..122N} and \citet{2005haip.book.....B}, the Poisson noise is approximated, in magnitudes, as:
+%\begin{equation}
+%\sigma_{Poisson} \approx 1.0857 / \textup{SNR},
+%\end{equation}
+%where SNR is the source's signal-to-noise ratio, equal to the ratio of the peak flux observed at PSF fitting centroid and the median sky background. 
+
+
+
+Linear regression fit error, $\sigma_{f}$ is estimated as the standard deviation from the mean:
+\begin{equation}
+\sigma_{f}=\sqrt{\frac{1}{n-1}\sum (x-\overline{x})^2},
+\end{equation}
+where $n$ is the number of sources, $x$ and $\overline{x}$ are source and comparison magnitudes \citep{1992PASP..104..435H, 2005SASS...24..107K}. The total magnitude uncertainty reported is, then
+\begin{equation}
+\sigma = \sqrt{\sigma_{flux}^2 + \sigma_{f}^2,}
+\end{equation}
+
+where $\sigma_{flux}$ is PSF flux fit uncertainty reported by the PSF photometry algorithm, translated into magnitude scale using the linear regression fit parameters \citep{2010JAVSO..38..202P}. For aperture photometry uncertainty due to photometry error $\Delta F$ converted to magnitudes is used instead of $\sigma_{flux}$.
+
+When a source is clicked, the Gaussian PSF fit $\sigma$ is also reported in the console, and a three-dimensional plot of FITS data at this coordinate is displayed in the right panel. If the fit $\sigma$ exceeds the median of $\sigma$ values by 20\% then a warning message is displayed in the console to warn the user that, perhaps, CCD might have entered a non-linear regime with this source, or background subtraction was not entirely successful. 
+
+Note that it is possible to improve uncertainities by reducing the magnitude range of stars in the ensemble. However, the range must be kept reasonably close to the target source's magnitude. 
+
+\textsc{MetroPSF} will report magnitudes with rounding to decimal places set in the Decimal Places to Report field in the left panel. 
+
+\subsubsection{Remove Fit Outlier}
+Outlying stars can be removed using this menu. Once clicked, a star is found within the minimum and maximum ensemble magnitude range set in the left panel with the highest comparison magnitude error. It is marked as an outlier and removed from the ensemble, and the linear regression fit is redone. Removed stars are displayed with red outlines. 
+
+\subsubsection{Remove Fit Outliers Until Ensemble Limit}
+\textsc{MetroPSF} will iteratively remove outliers from the fit until ensemble limit set in the left panel is reached. 
+
+\subsubsection{Remove Fit Outliers Beyond Separation Limit}
+Removes all outliers from the fit that are separated from the last clicked target beyond the Ensemble Outliers Separation Limit set in the left panel. 
+
+\subsubsection{Reset Fit Outliers}
+This resets the ensemble and all the outlier flags previously set in the photometry results table. 
+
+\subsubsection{Delete Photometry File}
+This menu item deletes the photometry results table---the \texttt{.phot} file. This resets all the data produced by the program for the currently open FITS file. 
+\subsubsection{Display Background Image}
+Displays the background image used to subtract from the original FITS data for the photometry. Use the Update item in the View menu to return to the original data view. Note background images are not saved.
+
+\subsection{Report Menu}
+\subsubsection{BAA: Generate Report}
+\label{baa}
+\textsc{MetroPSF} can generate a text report file compliant with BAA Photometry Database submission requirements. The current file layout used is CCD/DSLR v2.01. For the report, differential photometry generated from the last mouse click on a source is used. Object name is set in the left panel, along with observatory and observer settings. Exposure Start Date is pre-filled from the FITS header automatically. \textsc{MetroPSF} generates a \texttt{.txt} report file with the filename equal to the currently open FITS file in the \texttt{baa\_reports} folder in the current working folder. For Chart ID, the current comparison catalog and the center of frame is reported, along with the field of view, expressed in minutes of arc. 
+
+\subsubsection{BAA/AAVSO: Reports on All VSX Sources}
+Cycles through all VSX sources identified in the current data and generates an AAVSO and, then, BAA reports. Please note that per each source \textsc{MetroPSF} will automatically reset all outliers in the ensemble and will remove all ensemble stars that are located further than the Ensemble Outliers Separation Limit set in the left panel. If removing distant outliers is not desirable then this limit value can be set to an arbitrary high number.  
+
+\subsubsection{BAA/AAVSO: Batch Reports on All VSX Sources} \label{batch}
+Batch processing mode. Cycle through all the \texttt{.fits} and \texttt{.fit} extension files in the selected folder and generate an AAVSO and, then, BAA report on all VSX sources found in each file. Each file is processed as following: 
+\begin{enumerate}
+\item Load and display file.
+\item Perform PSF photometry if PSF Photometry Batch Processing is set in the right panel. Otherwise, perform aperture photometry. 
+\item Obtain astrometric calibration (solved image). 
+\item Get comparison stars from the selected VizieR catalog. 
+\item Perform linear regression fit.
+\item Remove outliners until ensemble limit set in the left panel is reached.
+\item Cycle through all VSX sources and generate an AAVSO and, then, BAA report files. 
+\end{enumerate}
+All the \textsc{MetroPSF} settings in the left and right panels are honored throughout the batch processing mode. Note a console log is saved to \texttt{metropsf.log} in the current working folder on each step which is useful to assess performance. Batch processing is automatically halted on any errors.
+
+\subsubsection{BAA: Light Curve from Reports}
+Processes all BAA reports in a selected folder to display a light curve. The object name given in the left panel is used as the basis to select report files, whereby file names must be in the format of \texttt{*Object Name.txt} which \textsc{MetroPSF} uses by default when generating reports. Note that filter value is ignored while reading files, and the filter set in the left panel is used to annotate the magnitude axis in the plot.
+
+An example of batch photometry processing of multiple files with light curve generation for a known VSX source in the data would be as following:
+\begin{enumerate}
+\item Load a FITS file using the File / Open menu. 
+\item Perform full photometry for this file. Refer to \S \ref{quickstart} for introduction. Make sure all the settings are correct and that photometry can be performed successfully on a single image.  
+\item Fill all the pink fields with observatory data. Exposure Start will be filled automatically.  
+\item Click on Report / Batch BAA Report on All VSX Sources and select a folder with all the FITS files. This will generate report \texttt{.txt} files for all VSX sources found in the image.
+\item Click on a known VSX source in the image to pre-fill Object Name field in the left panel for light curve generation.  
+\item Click on Report / Light Curve from BAA Reports and select a folder with all the report files.
+\end{enumerate}
+
+\subsubsection{AAVSO: Generate Report}
+\textsc{MetroPSF} can generate a text report file compliant with AAVSO Extended File Format. The current file layout used is version 1.2. For the report, differential photometry generated from the last mouse click on a source is used. Object name is set in the left panel, along with observatory and observer settings. \textsc{MetroPSF} generates a \texttt{.txt} report file with the filename equal to the currently open FITS file with the \texttt{AAVSO} suffix in the \texttt{aavso\_reports} folder in the current working folder. For Chart ID, the current comparison catalog is reported.
+
+The check star is found automatically in the field of view by submitting HTTP request to the AAVSO VSP server. A check star is selected which has the least magnitude difference with the target source. It is automatically marked as an outlier in the ensemble, the linear regression fit is redone with this check star excluded, then differential magnitudes are obtained for both the check star and the target source using the new ensemble. These magnitudes are submitted in the report.  
+
+\textbf{Important: the CCD filter string is passed as is from the left panel setting. This will work for Johnson filters, however, you may need to manually edit the report before the submission to reflect, e.g., TG for green filter. The report also defaults to CCD type, hence, if DSLR is used, the report file must be corrected.}
+
+\subsection{Miscellaneous Functions}
+\subsubsection{Report VSX Sources Nearby}
+Enabling this checkbox will make \textsc{MetroPSF} report any VSX catalog entries within {30\arcsec} from the clicked source. This may be useful to retrieve information about, for example, past supernovae in the galaxy. 
+
+\subsubsection{Image Stretching}
+In addition to linear stretching with sliders in the right panel, \textsc{MetroPSF} offers non-linear functions to modify screen transfer for user convenience when analyzing high dynamic range images. These functions include square root, $\log$ and the inverse hyperbolic sine, arcsinh. Note this modifies only the screen representation without changing the underlying FITS data.
+
+\subsection{Operation from Command Line}
+\textsc{MetroPSF} can be initiated from command line to automate photometry tasks. The program can be run with the \texttt{-h} flag to bring up the following usage message: 
+\begin{verbatim}
+usage: metropsf.py [-h] [-i INPUT] [-s SET] [-r]
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        FITS file or directory to process
+  -s SET, --set SET     MetroPSF settings file to use for processing
+  -r, --report          Generate BAA/AAVSO report on all VSX sources
+\end{verbatim}
+
+An example command to generate a BAA/AAVSO report on a single FITS file as the input would be as following:
+
+\begin{verbatim}
+$ python metropsf.py -i \
+"calibrated-T11-blackhaz-CG Dra-20210516-010321-V-BIN1-E-300-012.fit" \
+-s "t11 CG Dra.mpsf" -r
+\end{verbatim}
+
+Note that file names with spaces should be specified using quote marks. On execution with the \texttt{-r} flag the program loads the settings file first and then proceeds to the report generation, as described in \S \ref{batch}. After reports are generated the program quits. All console messages are saved in the log file.
+
+\section {Acknowledgement} 
+Thanks to Cliff Kotnik from AAVSO for contributing code and ideas.
+
+\section{Change Log}
+
+\subsection{Version 0.16}
+\begin{itemize}
+\item Command-line batch processing.
+\item Rewritten histogram stretch function when generating FITS thumbnail (Cliff Kotnik).
+\item Fixed CCD gain setting on load.
+\end{itemize}
+
+
+\subsection{Version 0.15}
+\begin{itemize}
+\item Aperture photometry.
+\item AAVSO report generation.
+\item Automatic BAA reporting on all VSX sources in the image.
+\item Batch processing of all FITS files in a folder.
+\item Light curve generation from BAA reports.
+\item Added ability to remove outliers from the fit - by ensemble limit and maximum separation. 
+\item Reporting number of ensemble stars on the linear regression fit plot.
+\item Object name in the left panel is now automatically set from VSX catalog for matching sources.
+\item Display next VSX source.
+\item Mouse click now reports time in ISO UTC format along with photometry result.
+\item Increased Astrometry.Net default solve timeout from 120 to 360 s.
+\item Linear regression fit error is now based on standard deviation.
+\item \textsc{MetroPSF} now writes a log to \texttt{metropsf.log}.
+\item Astrometry.net URL and API key setting in the interface.
+\item PSF fitting algorithm setting.
+\item FITS crop option.
+\item Exposure start is now obtained from DATE-OBS field before the JD field in FITS.
+\end{itemize}
+
+
+\subsection{Version 0.14}
+\begin{itemize}
+\item Reporting PSF flux fit error. Total photometry error reported now is the square root of sum of squares of the PSF flux fit error and the linear regression fit error. 
+\item Load and save settings.
+\item BAA Photometry Database report generation.
+\item Added decimal places to report setting.
+\item Explicit UTF-8 declaration in the Python file. 
+\end{itemize}
+
+\subsection{Version 0.13}
+\begin{itemize}
+\item Added ensemble limit option.
+\item Added Gaia DR2 to comparison catalogs.
+\item Added non-linear image stretching via square root, log and asinh. 
+\end{itemize}
+
+
+\subsection{Version 0.12} 
+\begin{itemize}
+\item Added ability to remove AAVSO VSX stars from the ensemble. 
+\item Sources with AAVSO VSX match are plotted with yellow circles. 
+\item Added reporting of nearby VSX sources.
+\item Added matching radius setting. 
+\item Fixed loading of 16-bit FITS files. 
+\item Various bugfixes.
+\end{itemize}
+
+\subsection{Version 0.11}
+\begin{itemize}
+\item Initial Release. 
+\end{itemize}
+
+\section{Known Issues}
+\begin{itemize}
+\item Photometry uncertainty is not reported by photutils in some cases -- the ``flux\_unc'' error. Decreasing fitting width helps. 
+\item Sometimes FITS files are not saved correctly (0 bytes written).
+\item Random ``bus error'' crashes. Restarting and following the same steps resolves the issue.
+\end{itemize}
+
+\section{License Information}
+\textsc{MetroPSF} source code is distributed via 2-clause BSD license. Copyright \textcopyright \ 2021, Maxym Usatov. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+\bibliography{Master.bib}
+\bibliographystyle{apj} 
+
+
+\end{document}   
