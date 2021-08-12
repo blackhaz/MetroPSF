@@ -57,11 +57,20 @@ def save_background_image(stretch_min, stretch_max, zoom_level, image_data):
     global FITS_minimum
     global FITS_maximum
     global background_image
-    background_image = Image.fromarray(image_data)
+    converted_data = image_data.astype(float)
+    converted_data = (converted_data - np.min(converted_data)) / np.ptp(converted_data)
+    imean = np.mean(converted_data)
+    isd = np.std(converted_data)
+    imin = np.min(converted_data)
+    imax = np.max(converted_data)
+    black = max(imean + stretch_min * isd, imin)
+    white = min(imean + stretch_max * isd, imax)
+    slope = 1.0 / (white - black)
+    converted_data = np.clip((converted_data - black) * slope, 0.0, 1.0)
+    background_image = Image.fromarray(converted_data * 255.0)
     width, height = background_image.size
     new_size = (int(width * zoom_level), int(height * zoom_level))
     background_image = background_image.resize(new_size, Image.ANTIALIAS)
-    background_image = ImageMath.eval("(a + " + str(stretch_min / 100 * FITS_maximum) + ") * 255 / " + str(stretch_max / 100 * FITS_maximum), a=background_image)
     background_image = ImageMath.eval("convert(a, 'L')", a=background_image)
     background_image.save('background.jpg')
 
@@ -77,31 +86,29 @@ def save_image(stretch_min, stretch_max, zoom_level, image_data, filename):
     _image.save(filename)
 
 def generate_FITS_thumbnail(stretch_min, stretch_max, zoom_level, stretching_stringvar):
-    global generated_image
-    global image_data
-    global FITS_minimum
-    global FITS_maximum
-    converted_data = image_data.astype(float)
-    if stretching_stringvar == "Square Root":
-        stretch = SqrtStretch()
-        converted_data = (converted_data - np.min(converted_data)) / np.ptp(converted_data)
-        converted_data = stretch(converted_data)
-
-    if stretching_stringvar == "Log":
-        stretch = LogStretch()
-        converted_data = (converted_data - np.min(converted_data)) / np.ptp(converted_data)
-        converted_data = stretch(converted_data)
-
-    if stretching_stringvar == "Asinh":
-        stretch = AsinhStretch()
-        converted_data = (converted_data - np.min(converted_data)) / np.ptp(converted_data)
-        converted_data = stretch(converted_data)
-
     """
     CLKotnik 2021-08-11
     Altered the stretch low and high from percentage of histogram range to multiples of std dev
     from the mean.  With the low/min stretch set above the high/max the image is inverted.
     """
+    global generated_image
+    global image_data
+    global FITS_minimum
+    global FITS_maximum
+    converted_data = image_data.astype(float)
+    converted_data = (converted_data - np.min(converted_data)) / np.ptp(converted_data)
+
+    if stretching_stringvar == "Square Root":
+        stretch = SqrtStretch()
+        converted_data = stretch(converted_data)
+
+    if stretching_stringvar == "Log":
+        stretch = LogStretch()
+        converted_data = stretch(converted_data)
+
+    if stretching_stringvar == "Asinh":
+        stretch = AsinhStretch()
+        converted_data = stretch(converted_data)
     imean = np.mean(converted_data)
     isd = np.std(converted_data)
     imin = np.min(converted_data)
@@ -1044,11 +1051,11 @@ class MyGUI:
             self.update_display()
 
     def update_histogram_low(self, value):
-        self.histogram_slider_low = int(value)
+        self.histogram_slider_low = float(value)
         self.update_display()
 
     def update_histogram_high(self, value):
-        self.histogram_slider_high = int(value)
+        self.histogram_slider_high = float(value)
         self.update_display()
 
     def save_settings_as(self):
@@ -1808,10 +1815,11 @@ class MyGUI:
         # Histogram stretch sliders
         self.stretch_label = tk.Label(self.right_frame, text="Histogram Stretch Low/High:")
         self.stretch_label.grid(row=14, column=0, sticky=tk.W)
-        self.stretch_low = tk.Scale(self.right_frame, from_=-10, to=100, orient=tk.HORIZONTAL, command=self.update_histogram_low)
+        self.stretch_low = tk.Scale(self.right_frame, from_=-5, to=5, orient=tk.HORIZONTAL, command=self.update_histogram_low, resolution=0.1)
         self.stretch_low.grid(row=15, column=0, sticky=tk.EW)
-        self.stretch_high = tk.Scale(self.right_frame, from_=0, to=100, orient=tk.HORIZONTAL, command=self.update_histogram_high)
-        self.stretch_high.set(5)
+        self.stretch_high = tk.Scale(self.right_frame, from_=-5, to=5, orient=tk.HORIZONTAL, command=self.update_histogram_high, resolution=0.1)
+        self.stretch_low.set(-1.0)
+        self.stretch_high.set(2.0)
         self.stretch_high.grid(row=16, column=0, sticky=tk.EW)
 
         self.stretching_label = tk.Label(self.right_frame, text="Image Stretching:")
