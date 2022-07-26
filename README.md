@@ -1,5 +1,5 @@
 # MetroPSF
-Astronomical Photometry Prgroam
+Astronomical Photometry Program
 
 MetroPSF is an open source astronomical photometry program. It’s goal is providing a convenient and intuitive graphical user interface to algorithms implemented in photutils (Bradley et al., 2020), in particular iteratively subtracted point spread function (PSF) photometry—a variant of the DAOPHOT algorithm by Stetson (1987) for PSF photometry in crowded ﬁelds, and aperture photometry.
 
