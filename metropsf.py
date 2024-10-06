@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
-# MetroPSF (C) Copyright 2021, Maxym Usatov <maxim.usatov@bcsatellite.net>
-# Thanks to Cliff Kotnik from AAVSO for contributing code and ideas.
+# MetroPSF (C) Copyright 2021-2024, Maxym Usatov <maxim.usatov@bcsatellite.net>
+#
+# With gratitude to:
+# Cliff Kotnik / AAVSO for contributing code and ideas.
+# Paul Leyland / BAA for helping to rewrite for modern photutils and keep the code alive.
+#
 # Please refer to metropsf.pdf for license information.
+
+# These have to be set to your system's local solver commands
+timeout_command = "timeout"                     # Could be blank
+solver_command = "solve-field"
 
 import numpy as np
 import warnings
@@ -13,15 +21,18 @@ import requests
 import sys
 import argparse
 import pandas as pd
+from datetime import datetime, timedelta
 from astropy.io import fits
 from astropy.time import Time
 from astropy import units as u
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
+from astropy.table import Table, Column
 from astropy.visualization import SqrtStretch, LogStretch, AsinhStretch
 from PIL import Image, ImageTk, ImageMath, ImageOps
 from astroquery.astrometry_net import AstrometryNet
 from astroquery.vizier import Vizier
+from astroquery.imcce import Skybot
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
@@ -37,10 +48,10 @@ from tkinter import filedialog as fd
 
 # Photometry
 from photutils.detection import IRAFStarFinder
-from photutils.psf import IntegratedGaussianPRF, DAOGroup
+from photutils.psf import IntegratedGaussianPRF, SourceGrouper
 from photutils.background import MMMBackground, MADStdBackgroundRMS
-from photutils.psf import IterativelySubtractedPSFPhotometry
-from astropy.modeling.fitting import LevMarLSQFitter, LinearLSQFitter, SLSQPLSQFitter, SimplexLSQFitter
+from photutils.psf import PSFPhotometry
+from astropy.modeling.fitting import LMLSQFitter, LinearLSQFitter, SLSQPLSQFitter, SimplexLSQFitter
 from astropy.stats import gaussian_sigma_to_fwhm
 from astropy.stats import SigmaClip
 from photutils import Background2D, MedianBackground
@@ -70,7 +81,7 @@ def save_background_image(stretch_min, stretch_max, zoom_level, image_data):
     background_image = Image.fromarray(converted_data * 255.0)
     width, height = background_image.size
     new_size = (int(width * zoom_level), int(height * zoom_level))
-    background_image = background_image.resize(new_size, Image.ANTIALIAS)
+    background_image = background_image.resize(new_size)
     background_image = ImageMath.eval("convert(a, 'L')", a=background_image)
     background_image.save('background.jpg')
 
@@ -80,7 +91,7 @@ def save_image(stretch_min, stretch_max, zoom_level, image_data, filename):
     _image = Image.fromarray(image_data)
     width, height = _image.size
     new_size = (int(width * zoom_level), int(height * zoom_level))
-    _image = _image.resize(new_size, Image.ANTIALIAS)
+    _image = _image.resize(new_size)
     _image = ImageMath.eval("(a + " + str(stretch_min / 100 * FITS_maximum) + ") * 255 / " + str(stretch_max / 100 * FITS_maximum), a=background_image)
     _image = ImageMath.eval("convert(a, 'L')", a=background_image)
     _image.save(filename)
@@ -121,7 +132,7 @@ def generate_FITS_thumbnail(stretch_min, stretch_max, zoom_level, stretching_str
     generated_image = Image.fromarray(converted_data * 255.0)
     width, height = generated_image.size
     new_size = (int(width * zoom_level), int(height * zoom_level))
-    generated_image = generated_image.resize(new_size, Image.ANTIALIAS)
+    generated_image = generated_image.resize(new_size)
 
 image_file = ""
 image_data = []
@@ -265,6 +276,11 @@ class MyGUI:
 
                 self.bkg_value = np.median(image_data)
                 self.console_msg("Median background level, ADU: " + str(self.bkg_value))
+
+                if os.path.exists(os.path.splitext(image_file)[0] + ".wcs"):
+                    # Let's load a WCS header if this image is already solved.
+                    self.load_wcs_from_file(os.path.splitext(image_file)[0] + ".wcs")
+
         except Exception as e:
             self.error_raised = True
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -420,7 +436,7 @@ class MyGUI:
                                       fwhm=fwhm, roundhi=3.0, roundlo=-5.0,
                                        sharplo=sharplo, sharphi=2.0)
 
-            daogroup = DAOGroup(2.0 * fwhm * gaussian_sigma_to_fwhm)
+            daogroup = SourceGrouper(2.0 * fwhm * gaussian_sigma_to_fwhm)
             #mmm_bkg = MMMBackground()
 
             sigma_clip = SigmaClip(sigma = 3.0)
@@ -434,7 +450,7 @@ class MyGUI:
 
             if self.fitter_stringvar.get() == "Levenberg-Marquardt":
                 self.console_msg("Setting fitter to Levenberg-Marquardt")
-                fitter = LevMarLSQFitter(calc_uncertainties=True)
+                fitter = LMLSQFitter(calc_uncertainties=True)
 
             if self.fitter_stringvar.get() == "Linear Least Square":
                 self.console_msg("Setting fitter to Linear Least Square")
@@ -451,20 +467,29 @@ class MyGUI:
 
             psf_model = IntegratedGaussianPRF(sigma=2)  # sigma=2 here is the initial guess
             psf_model.sigma.fixed = False   # This allows to fit Gaussian PRF sigma as well
-            photometry = IterativelySubtractedPSFPhotometry(finder=iraffind,
-                                                            group_maker=daogroup,
-                                                            psf_model=psf_model,
-                                                            bkg_estimator=None,
-                                                            fitter=LevMarLSQFitter(),
-                                                            niters=iterations, fitshape=(self.fit_shape, self.fit_shape))
+
+            photometry = PSFPhotometry(psf_model=psf_model,
+                                       fit_shape = (self.fit_shape, self.fit_shape), finder = iraffind,
+                                       grouper = SourceGrouper(2.0 * fwhm * gaussian_sigma_to_fwhm),
+                                       fitter = fitter, localbkg_estimator = None,
+                                       fitter_maxiters = iterations,
+                                       aperture_radius = 2.0 * fwhm * gaussian_sigma_to_fwhm)
+
+
             self.console_msg("Performing photometry..")
-            result_tab = photometry(image=clean_image)
-            residual_image = photometry.get_residual_image()
+            result_tab = photometry(data=clean_image)
+            residual_image = photometry.make_residual_image(data=clean_image, psf_shape=(self.fit_shape, self.fit_shape))
+            #residual_image = photometry.get_residual_image()
             #fits.writeto("residuals.fits", residual_image, header, overwrite=True)
             #self.console_msg("Done. PSF fitter message(s): " + str(fitter.fit_info['message']))
 
             self.results_tab_df = result_tab.to_pandas()
             self.results_tab_df["removed_from_ensemble"] = False
+
+            self.results_tab_df.rename(columns={"x_init": "x_0",
+                                                "y_init": "y_0",
+                                                "flux_init": "flux_0",
+                                                "flux_err": "flux_unc"}, inplace=True)
 
             self.results_tab_df.to_csv(self.image_file + ".phot", index=False)
             self.console_msg("Photometry saved to " + str(self.image_file + ".phot"))
@@ -490,6 +515,9 @@ class MyGUI:
             vsx_ids_in_photometry_table = False
             if "vsx_id" in self.results_tab_df:
                 vsx_ids_in_photometry_table = True
+            skybot_names_in_photometry_table = False
+            if "skybot_name" in self.results_tab_df:
+                skybot_names_in_photometry_table = True
             exptime = float(self.exposure_entry.get())
             if os.path.isfile(self.image_file+".phot"):
                 self.fit_shape = int(self.photometry_aperture_entry.get())
@@ -511,6 +539,28 @@ class MyGUI:
                     if vsx_ids_in_photometry_table:
                         if len(str(row["vsx_id"])) > 0 and str(row["vsx_id"]) != "nan":
                             outline_color="yellow"
+                    if skybot_names_in_photometry_table:
+                        if len(str(row["skybot_name"])) > 0 and str(row["skybot_name"]) != "nan":
+                            outline_color = "orange"
+                            self.canvas.create_text(row["x_fit"] * self.zoom_level + 10,
+                                                    row["y_fit"] * self.zoom_level - 15, fill="white",
+                                                    anchor=tk.W,
+                                                    text=row["skybot_name"])
+                            self.canvas.create_text(row["x_fit"] * self.zoom_level + 10,
+                                                    row["y_fit"] * self.zoom_level - 0, fill="white",
+                                                    anchor=tk.W,
+                                                    text=row["skybot_type"])
+                            self.canvas.create_text(row["x_fit"] * self.zoom_level + 10,
+                                                    row["y_fit"] * self.zoom_level + 15, fill="white",
+                                                    anchor=tk.W,
+                                                    text=str(round(float(row["skybot_heliocentric_distance"]),
+                                                                   2)) + " AU")
+                            self.canvas.create_text(row["x_fit"] * self.zoom_level + 10,
+                                                    row["y_fit"] * self.zoom_level + 30, fill="white",
+                                                    anchor=tk.W,
+                                                    text="s = " + str(
+                                                        round(float(row["skybot_separation"]) / 0.000277778,
+                                                              2)) + '"')  # degrees to arcsec
                     self.create_circle(x=row["x_fit"] * self.zoom_level, y=row["y_fit"] * self.zoom_level,
                                        r=self.fit_shape / 2 * self.zoom_level, canvas_name=self.canvas, outline_color=outline_color)
         except Exception as e:
@@ -622,6 +672,16 @@ class MyGUI:
                                 "Nearby VSX Source: " + str(matching_star["nearby_vsx_id"]) + " separation: " + str(
                                     matching_star["nearby_vsx_separation"]))
 
+            # Report SkyBoT matches
+            if "skybot_name" in self.results_tab_df:
+                matching_star_criterion = (self.results_tab_df["x_fit"] == results_table_x_fit) & (
+                            self.results_tab_df["y_fit"] == results_table_y_fit)
+                if len(self.results_tab_df[matching_star_criterion]) > 0:
+                    matching_star = self.results_tab_df[matching_star_criterion].iloc[0]
+                    if len(str(matching_star["skybot_name"])) > 0 and str(matching_star["skybot_name"]) != "nan":
+                        self.console_msg("Matching SkyBoT Source: " + str(matching_star["skybot_name"]))
+                        self.set_entry_text(self.object_name_entry, str(matching_star["skybot_name"]))
+
             if self.a != 0 and self.b != 0 and x_fit != 0 and y_fit != 0:
                 differential_magnitude = round(inst_mag * self.a + self.b, decimal_places)
 
@@ -724,12 +784,11 @@ class MyGUI:
         self.console_msg("Zoom: " + str(self.zoom_level))
         self.display_image()
 
-    def solve_image(self):
+    def solve_image_remote(self):
         global generated_image
         global header
         self.console_msg("Solving via Astrometry.Net..")
         try:
-
             ast = AstrometryNet()
             ast.api_key = self.astrometrynet_key_entry.get()
             ast.URL = "http://" + self.astrometrynet_entry.get()
@@ -750,6 +809,130 @@ class MyGUI:
             self.error_raised = True
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.console_msg(str(exc_tb.tb_lineno)+" "+str(e))
+
+
+    def load_wcs_from_file(self, filename):
+        try:
+            hdulist = fits.open(filename)
+            self.wcs_header = WCS(hdulist[0].header)
+            self.console_msg("WCS header loaded from existing file "+filename)
+        except Exception as e:
+            self.error_raised = True
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.console_msg(str(exc_tb.tb_lineno)+" "+str(e))
+
+
+    def solve_image(self):
+        if self.solver_stringvar.get() == 'Remote':
+            self.solve_image_remote()
+            return
+        else:
+            self.solve_image_local()
+
+
+    def solve_image_local(self, polynomial_order=3):
+        global header
+        global image_width, image_height
+
+        # Solve locally otherwise
+        try:
+            # Don't feed all stars - only 100 brightest!
+            positions = Table(names=('x', 'y'))
+            brightest_stars = self.results_tab_df
+            brightest_stars = brightest_stars.sort_values('flux_fit', ascending=False).head(100)
+            for index, row in brightest_stars.iterrows():
+                x = row["x_fit"]
+                y = row["y_fit"]
+                positions.add_row((x, y))
+            positions.write("positions.fits", overwrite=True)
+            image_basename = os.path.basename(self.image_file)
+            wcs_header_filename = os.path.splitext(image_basename)[0] + ".wcs"
+            wcs_header_dirname = os.path.dirname(self.image_file)
+            wcs_header_full_filename = os.path.join(wcs_header_dirname, wcs_header_filename)
+            self.console_msg("Solving via local solver..")
+            low_fov_estimate = float(self.fov_entry.get()) * 0.5
+            high_fov_estimate = float(self.fov_entry.get()) * 1.5
+            # We need timeout 60 here because there is a known bug with solve-field ignoring --cpulimit
+            solve_command = timeout_command + ' 60 ' + solver_command + ' --cpulimit 60 --overwrite -L ' + str(low_fov_estimate) + ' -H ' + str(
+                high_fov_estimate) + ' --width ' + str(image_width) + ' --height ' + str(image_height)
+            if polynomial_order > 0:
+                solve_command = solve_command + ' --tweak-order ' + str(polynomial_order) # SIP distortion correction
+            else:
+                self.console_msg("Ignoring distortion correction.")
+                solve_command = solve_command + ' -T' # No distortion correction
+
+            solve_command = solve_command + ' positions.fits ' + '--wcs "' + wcs_header_full_filename + '"'
+            print(solve_command)
+            os.system(solve_command)
+            if os.path.exists(wcs_header_full_filename):
+                self.console_msg("Reading WCS..")
+                wcs = fits.open(wcs_header_full_filename)
+                w = WCS(wcs[0].header)
+                self.console_msg("Solved.")
+                self.wcs_header = w
+            else:
+                self.console_msg("No solution found.")
+        except Exception as e:
+            self.error_raised = True
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.console_msg(str(exc_tb.tb_lineno)+" "+str(e))
+
+
+    def get_skybot_objects(self):
+        global image_width, image_height
+        try:
+            frame_center = self.wcs_header.pixel_to_world(int(image_width / 2), (image_height / 2))
+            frame_center_coordinates = SkyCoord(ra=frame_center.ra, dec=frame_center.dec)
+            frame_edge = self.wcs_header.pixel_to_world(int(image_width), (image_height))
+            frame_edge_coordinates = SkyCoord(ra=frame_edge.ra, dec=frame_edge.dec)
+            frame_radius = frame_edge.separation(frame_center)
+            self.console_msg(
+                "Inquiring SkyBoT, center α δ " + frame_center.to_string("hmsdms") + ", radius " + str(frame_radius))
+            jd_time = Time(float(self.exposure_start_entry.get()), format='jd') + timedelta(seconds=float(self.exposure_entry.get()) / 2)
+            skybot_objects=Skybot.cone_search(frame_center, frame_radius, jd_time).to_pandas()
+            skybot_objects.to_csv("skybot.csv")
+            self.console_msg(str(len(skybot_objects))+" SkyBoT objects retrieved.")
+
+            # Matching with Skybot catalog
+            self.console_msg("Matching non-stellar sources with SkyBoT objects..")
+            self.results_tab_df["skybot_name"] = "" # Reset everything to blank
+            self.results_tab_df["skybot_type"] = ""
+            self.results_tab_df["skybot_heliocentric_distance"] = ""
+            self.results_tab_df["skybot_separation"] = ""
+            photometry_table = SkyCoord(self.results_tab_df["ra_fit"] * u.deg, self.results_tab_df["dec_fit"] * u.deg, unit=u.deg) # 2024 May 13
+            catalog_comparison = SkyCoord(skybot_objects["RA"] * u.deg, skybot_objects["DEC"] * u.deg, unit=u.deg) # 2024 May 13
+            match_index, separations, d3d_match = photometry_table.match_to_catalog_sky(catalog_comparison)
+            matching_radius = float(self.skybot_matching_radius_entry.get()) * u.arcsec
+            for i in range(0, len(match_index - 1)):
+                if separations[i] <= matching_radius and \
+                        (len(str(self.results_tab_df.loc[i, "match_id"])) == 0 or str(self.results_tab_df.loc[i, "match_id"]) == "nan"):
+                    self.results_tab_df.loc[i, "skybot_name"] = skybot_objects.iloc[match_index[i]]["Name"]
+                    self.results_tab_df.loc[i, "skybot_type"] = skybot_objects.iloc[match_index[i]]["Type"]
+                    self.results_tab_df.loc[i, "skybot_heliocentric_distance"] = skybot_objects.iloc[match_index[i]]["heliodist"]
+                    self.results_tab_df.loc[i, "skybot_separation"] = float(separations[i] / u.deg)
+            # Now let's remove duplicate SkyBoT matches and leave only closest unique matches
+            self.console_msg("Removing duplicates..")
+            skybot_match_names = self.results_tab_df["skybot_name"].unique()
+            for skybot_match_name in skybot_match_names:
+                mask = self.results_tab_df['skybot_name'] == skybot_match_name
+                this_skybot_object = self.results_tab_df.loc[mask]
+                # Find minimum separation
+                min_separation = this_skybot_object["skybot_separation"].min()
+                for index, row in self.results_tab_df.iterrows():
+                    if row["skybot_name"] == skybot_match_name and row["skybot_separation"] > min_separation:
+                        self.results_tab_df.loc[index, "skybot_name"] = "" # We remove all non-minimum matches
+                        self.results_tab_df.loc[index, "skybot_type"] = ""
+                        self.results_tab_df.loc[index, "skybot_heliocentric_distance"] = ""
+                        self.results_tab_df.loc[index, "skybot_separation"] = ""
+
+            self.results_tab_df.to_csv(self.image_file + ".phot", index=False)
+            self.console_msg("Photometry table saved to " + str(self.image_file + ".phot"))
+            self.display_image()
+        except Exception as e:
+            self.error_raised = True
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.console_msg(str(exc_tb.tb_lineno) + " " + str(exc_type) + " " + str(exc_obj) + " " + str(exc_tb) + " " + str(e))
+
 
     def get_comparison_stars(self):
         global image_width, image_height
@@ -789,9 +972,14 @@ class MyGUI:
                 ra_column_name = "RA_ICRS"
                 dec_column_name = "DE_ICRS"
 
+            if self.catalog_stringvar.get() == "Gaia DR3":
+                catalog = "I/355"
+                ra_column_name = "RA_ICRS"
+                dec_column_name = "DE_ICRS"
+
             vizier_mag_column = self.filter + "mag"
 
-            comparison_stars = Vizier(catalog=catalog, row_limit=-1).query_region(frame_center, frame_radius)[0]
+            comparison_stars = Vizier(catalog=catalog, row_limit=-1).query_region(frame_center, radius=frame_radius)[0]
             self.console_msg("Found " + str(len(comparison_stars)) + " objects in the field.")
             # print(comparison_stars)
             if vizier_mag_column not in comparison_stars.colnames:
@@ -838,7 +1026,7 @@ class MyGUI:
 
                 if self.remove_vsx_var.get():
                     self.console_msg("Inquiring VizieR for VSX variables in the field..")
-                    vsx_result = Vizier(catalog="B/vsx/vsx", row_limit=-1).query_region(frame_center, frame_radius)
+                    vsx_result = Vizier(catalog="B/vsx/vsx", row_limit=-1).query_region(frame_center, radius=frame_radius)
                     #print(vsx_result)
                     if len(vsx_result) > 0:
                         vsx_stars = vsx_result[0]
@@ -1081,9 +1269,8 @@ class MyGUI:
                 settings.update({'longitude_entry': self.longitude_entry.get()})
                 settings.update({'height_entry': self.height_entry.get()})
                 settings.update({'telescope_entry': self.telescope_entry.get()})
-                settings.update({'telescope_design_entry': self.accessory_entry.get()})
+                settings.update({'accessory_entry': self.accessory_entry.get()})
                 settings.update({'ccd_entry': self.ccd_entry.get()})
-                settings.update({'detector_entry': self.ccd_gain_entry.get()})
                 settings.update({'weighting_stringvar': self.weighting_stringvar.get()})
                 settings.update({'catalog_stringvar': self.catalog_stringvar.get()})
                 settings.update({'vizier_catalog_entry': self.vizier_catalog_entry.get()})
@@ -1095,6 +1282,8 @@ class MyGUI:
                 settings.update({'crop_fits_entry': self.crop_fits_entry.get()})
                 settings.update({'astrometrynet_entry': self.astrometrynet_entry.get()})
                 settings.update({'astrometrynet_key_entry': self.astrometrynet_key_entry.get()})
+                settings.update({'fov_entry': self.fov_entry.get()})
+                settings.update({'skybot_matching_radius_entry': self.skybot_matching_radius_entry.get()})
                 with open(str(file_name.name), 'w') as f:
                     w = csv.DictWriter(f, settings.keys())
                     w.writeheader()
@@ -1200,12 +1389,12 @@ class MyGUI:
                 for band in star['bands']:
                     if band['band'] == filter_band:
                         mag = band['mag']
-                result = result.append({
-                    "AUID": auid,
-                    "RA": ra,
-                    "Dec": dec,
-                    "Mag": mag
-                }, ignore_index=True)
+                result = pd.concat([result, pd.DataFrame({
+                    "AUID": [auid],
+                    "RA": [ra],
+                    "Dec": [dec],
+                    "Mag": [mag]
+                })])
             return result
         except Exception as e:
             self.error_raised = True
@@ -1313,6 +1502,34 @@ class MyGUI:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.console_msg(str(exc_tb.tb_lineno) + " " + str(e))
 
+    def next_skybot_source(self):
+        mask = self.results_tab_df['skybot_name'].notnull()
+        skybot_sources = self.results_tab_df.loc[mask]
+        next_skybot_source_name = ""
+        next_row = False
+        if self.object_name_entry.get() == "":
+            next_skybot_source_name = skybot_sources.iloc[0]['skybot_name']      # Reset to first source
+        if len(skybot_sources) > 0 and self.object_name_entry.get() != "":
+            for index, row in skybot_sources.iterrows():
+                if next_row:
+                    next_skybot_source_name = row['skybot_name']
+                    break
+                if row['skybot_name'] == self.object_name_entry.get():
+                    next_row = True
+            if next_skybot_source_name == "":
+                next_skybot_source_name = skybot_sources.iloc[0]['skybot_name']  # Reset to first source
+        self.console_msg("Next source: "+next_skybot_source_name)
+        x = int(self.results_tab_df.loc[self.results_tab_df['skybot_name'] == next_skybot_source_name]['x_0'] * self.zoom_level)
+        y = int(self.results_tab_df.loc[self.results_tab_df['skybot_name'] == next_skybot_source_name]['y_0'] * self.zoom_level)
+        self.canvas.xview(tk.MOVETO, 0)     # Reset canvas position
+        self.canvas.yview(tk.MOVETO, 0)
+        self.canvas.event_generate('<Button-1>',x=x,y=y)  # Simulate a mouse click
+        width, height = generated_image.size
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        self.canvas.xview(tk.MOVETO, (x-canvas_width/2)/width)  # Center canvas on the object
+        self.canvas.yview(tk.MOVETO, (y-canvas_height/2)/height)
+
     def next_vsx_source(self):
         mask = self.results_tab_df['vsx_id'].notnull()
         vsx_sources = self.results_tab_df.loc[mask]
@@ -1412,7 +1629,7 @@ class MyGUI:
                     full_filename = os.path.join(dir, filename)
                     point = pd.read_csv(full_filename, header=10, sep='\t')    # Skip to the 12th line with data
                     try:
-                        light_curve = light_curve.append(point, ignore_index=True)
+                        light_curve = pd.concat([light_curve, point])
                     except Exception as e:
                         self.error_raised = True
                         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -1456,7 +1673,7 @@ class MyGUI:
         self.screen_width = self.window.winfo_screenwidth()
         self.screen_height = self.window.winfo_screenheight()
 
-        self.program_name = "MetroPSF 0.16"
+        self.program_name = "MetroPSF 0.17"
 
         # Matplotlib settings
         matplotlib.rc('xtick', labelsize=7)
@@ -1486,6 +1703,7 @@ class MyGUI:
         self.viewmenu.add_command(label="100% Zoom", command=self.zoom_100)
         self.viewmenu.add_separator()
         self.viewmenu.add_command(label="Next VSX Source", command=self.next_vsx_source)
+        self.viewmenu.add_command(label="Next SkyBoT Source", command=self.next_skybot_source)
         self.menubar.add_cascade(label="View", menu=self.viewmenu)
 
         self.photometrymenu = tk.Menu(self.menubar, tearoff=0)
@@ -1497,6 +1715,7 @@ class MyGUI:
         self.photometrymenu.add_separator()
         self.photometrymenu.add_command(label="Solve Image", command=self.solve_image)
         self.photometrymenu.add_command(label="Get Comparison Stars", command=self.get_comparison_stars)
+        self.photometrymenu.add_command(label="Get SkyBoT Objects", command=self.get_skybot_objects)
         self.photometrymenu.add_command(label="Find Regression Model", command=self.find_linear_regression_model)
         self.photometrymenu.add_separator()
         self.photometrymenu.add_command(label="Remove Fit Outlier", command=self.remove_fit_outlier)
@@ -1638,6 +1857,13 @@ class MyGUI:
         self.set_entry_text(self.bkg_filter_size_entry, "1")
         row = row + 1
 
+        self.skybot_matching_radius_label = tk.Label(self.settings_frame, text="SkyBoT Matching Radius, arcsec:")
+        self.skybot_matching_radius_label.grid(row=row, column=0, sticky=tk.W)
+        self.skybot_matching_radius_entry = tk.Entry(self.settings_frame, width=settings_entry_width)
+        self.skybot_matching_radius_entry.grid(row=row, column=1, sticky=tk.E)
+        self.set_entry_text(self.skybot_matching_radius_entry, "15")
+        row = row + 1
+
         self.filter_label = tk.Label(self.settings_frame, text="CCD Filter:")
         self.filter_label.grid(row=row, column=0, sticky=tk.W)
         self.filter_entry = tk.Entry(self.settings_frame, width=settings_entry_width)
@@ -1701,6 +1927,13 @@ class MyGUI:
         self.astrometrynet_key_entry.grid(row=row, column=1, sticky=tk.E)
         self.astrometrynet_key_entry.config(show="*")
         self.set_entry_text(self.astrometrynet_key_entry, "pwjgdcpwaugkhkln")
+        row = row + 1
+
+        self.fov_label = tk.Label(self.settings_frame, text="FOV Estimate, deg:")
+        self.fov_label.grid(row=row, column=0, stick=tk.W)
+        self.fov_entry = tk.Entry(self.settings_frame, width=extended_settings_entry_width)
+        self.fov_entry.grid(row=row, column=1, sticky=tk.EW)
+        self.set_entry_text(self.fov_entry, "1")
         row = row + 1
 
         self.obscode_label = tk.Label(self.settings_frame, text="BAA Observer Code:")
@@ -1782,7 +2015,7 @@ class MyGUI:
         self.catalog_label.grid(row=5, column=0, sticky=tk.W)
         self.catalog_stringvar = tk.StringVar()
         self.catalog_stringvar.set("APASS DR9")
-        self.catalog_dropdown = tk.OptionMenu(self.right_frame, self.catalog_stringvar, "APASS DR9", "URAT1", "USNO-B1.0", "Gaia DR2", "VizieR Catalog")
+        self.catalog_dropdown = tk.OptionMenu(self.right_frame, self.catalog_stringvar, "APASS DR9", "URAT1", "USNO-B1.0", "Gaia DR2", "Gaia DR3", "VizieR Catalog")
         self.catalog_dropdown.grid(row=6, column=0, sticky=tk.EW)
 
         self.vizier_catalog_label = tk.Label(self.right_frame, text="VizieR Catalog Number:")
@@ -1829,6 +2062,13 @@ class MyGUI:
         self.stretching_dropdown = tk.OptionMenu(self.right_frame, self.stretching_stringvar, "None", "Square Root", "Log", "Asinh")
         self.stretching_dropdown.grid(row=18, column=0, sticky=tk.EW)
         self.stretching_stringvar.trace("w", lambda name, index, mode, sv=self.stretching_stringvar: self.update_display())
+
+        self.solver_label = tk.Label(self.right_frame, text="Astrometric Solver:")
+        self.solver_label.grid(row=19, column=0, sticky=tk.W)
+        self.solver_stringvar = tk.StringVar()
+        self.solver_stringvar.set("Local")
+        self.solver_dropdown = tk.OptionMenu(self.right_frame, self.solver_stringvar, "Local", "Remote")
+        self.solver_dropdown.grid(row=20, column=0, sticky=tk.EW)
 
         # Console below
         self.console = tk.Text(self.center, height=10, bg='black', fg='white', width=200)
