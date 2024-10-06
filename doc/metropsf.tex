@@ -84,7 +84,7 @@
 \def\HII{H\;{\sc ii}}
 
 \begin{document}
-\title{MetroPSF 0.16}
+\title{MetroPSF 0.17}
 \author{M. Usatov}
 \affil{maxim.usatov@bcsatellite.net}
 
@@ -95,7 +95,7 @@
 \section{Introduction} \label{intro}
 \textsc{MetroPSF} is an open source astronomical photometry program. It's goal is providing a convenient and intuitive graphical user interface to algorithms implemented in \textsc{photutils} \citep{larry_bradley_2020_4044744}, in particular iteratively subtracted point spread function (PSF) photometry---a variant of the \textsc{DAOPHOT} algorithm by \citet{1987PASP...99..191S} for PSF photometry in crowded fields, and aperture photometry. 
 
-\textsc{MetroPSF} can perform blind astrometric calibration of images via Astrometry.net service \citep{2010AJ....139.1782L}, request comparison photometry data from various catalogs in VizieR \citep{2000A&AS..143...23O}, match sources and perform differential photometry via linear regression fits to a weighted ensemble of sources. Such differential ensemble photometry method is described by \citet{2010JAVSO..38..202P}. It can also generate photometry reports compliant with British Astronomy Association's (BAA) Photometry Database and American Association of Variable Star Observers (AAVSO) submission guidelines, as well as process multiple FITS files in batch mode and report on all VSX sources found. It can generate light curves from individual report files produced. 
+\textsc{MetroPSF} can perform blind astrometric calibration of images via Astrometry.net service \citep{2010AJ....139.1782L}, request comparison photometry data from various catalogs in VizieR \citep{2000A&AS..143...23O}, match sources and perform differential photometry via linear regression fits to a weighted ensemble of sources. Such differential ensemble photometry method is described by \citet{2010JAVSO..38..202P}. It can also generate photometry reports compliant with British Astronomy Association's (BAA) Photometry Database and American Association of Variable Star Observers (AAVSO) submission guidelines, as well as process multiple FITS files in batch mode and report on all VSX sources found. It can generate light curves from individual report files produced. \textsc{MetroPSF} works with the SkyBoT (Sky Body Tracker) service to identify solar system bodies, such as comets and asteroids, automatically \citep{2006ASPC..351..367B}. 
 
 The program is developed using \textsc{Python}'s standard \textsc{Tkinter} graphical user interface and relies on a rather conservative subset of astronomical and data processing libraries to work that are typically well-maintained. The program is currently in the stage of a working prototype that requires further development and code refactoring. Feedback and suggestions are very welcome. \textsc{MetroPSF} is confirmed to work on Windows, Linux and FreeBSD operating systems and is, in principle, compatible with all operating systems capable of installing \textsc{Python} and the \textsc{Astropy},\footnote{http://www.astropy.org} package for astronomy \citep{astropy:2013, astropy:2018}. 
 
@@ -132,8 +132,8 @@ This menu allows to open and save FITS files with images. Saving the file also s
 For user convenience, it is possible to save \textsc{MetroPSF} session settings to an external file and load them later. Saved settings include all visible fields except CCD Filter and Exposure Start, which are pre-filled automatically when a FITS file is loaded; and Image Stretching settings for histogram stretching in the right panel, which are generally adjusted each time to a particular data. 
 \subsection{View Menu}
 The view menu allows to Update the current view with the plot of the FITS data and overlaid photometry results, if available. Zoom items adjust the current view. Note histogram stretch sliders are available in the right panel to adjust the view of the data.
-\subsubsection{Next VSX Source}
-This menu compares the object name entered in the left panel with the list of the VSX sources identified in the field, selects the next VSX source and centers the view on it. This allows to quickly iterate through all variable sources identified in the data.
+\subsubsection{Next VSX Source and Next SkyBoT Source}
+These commands compare the object name entered in the left panel with the list of VSX or SkyBoT sources identified in the field, selects the next applicable source and centers the view on it. This allows to quickly iterate through all variable sources identified in the data.
 \subsection{Photometry Menu}
 \subsubsection{Iteratively Subtracted PSF Photometry}
 Performs the Iteratively Subtracted PSF Photometry procedure from \textsc{photutils}. This is a variant of the \textsc{DAOPHOT} algorithm described by \citet{1987PASP...99..191S} for PSF photometry in crowded fields. First, sources are found in the data via the IRAF's \textsc{StarFinder} algorithm using a 2-dimensional circular Gaussian kernel to approximate PSFs. Local density maxima are searched for exceeding 	the threshold set in the Star Detection Threshold field in the left panel, above sky background. Overdensities at this step are expected to have PSF FWHM roughly similiar to the FWHM input in the left panel. Objects are expected to be sharper than the Lower Bound for Sharpness setting, which is by default set to 0.5 to avoid hot pixels. This setting can be lowered to detect sources with sharper response.
@@ -167,14 +167,27 @@ Photometry results table with instrumental magnitude per each source. All detect
 These items allow to plot and hide photometry results. When photometry is plotted, it is read from the \texttt{.phot} file each time. All detected sources are shown in grey, while sources having catalog matches are shown in green, and those having matches in the AAVSO The International Variable Star Index (VSX) catalog \citep{2006SASS...25...47W} database are shown in yellow. Stars-outliers that are removed from the ensemble are shown in red.
 
 \subsubsection{Solve Image}
-Obtains blind astrometric calibration of the current image via Astrometry.net service. No input or initial guess is required. A list of sources from the photometry results table is sorted by flux with brightest sources first, and the list submitted to the Astrometry.net server. A solution is obtained and converted to WCS header which is then used to convert image pixel coordinates to celestial coordinates. 
+Obtains blind astrometric calibration of the current image via local Astrometry.net solver (shell command) or online service. No input or initial guess is required with the online service, however it may not be as successful as the local solver for which a FOV estimate (in degrees) must be specified. A list of sources from the photometry results table is sorted by flux with brightest sources first, and the list submitted to the Astrometry.net server or local solver. A solution is obtained and converted to WCS header which is then used to convert image pixel coordinates to celestial coordinates. 
 
-By default, \texttt{nova.astrometry.net} is set as the server, however, you can use a local copy of the Astrometry.net service for this purpose.  The Linux Docker container provided by dm90\footnote{\url{https://github.com/dam90/astrometry}} is working well for this purpose with very little configuration required out-of-the-box. Please note that a port number is likely required in the URL field in the left pane to use a non-standard server, e.g. \texttt{127.0.0.1:8000}.
+When using an online solver then by default \texttt{nova.astrometry.net} is set as the server, however, you can use a local copy of the Astrometry.net service for this purpose.  The Linux Docker container provided by dm90\footnote{\url{https://github.com/dam90/astrometry}} is working well for this purpose with very little configuration required out-of-the-box. Please note that a port number is likely required in the URL field in the left pane to use a non-standard server, e.g. \texttt{127.0.0.1:8000}.
+
+Using a local solver is recommended because it is much faster and simpler. You may need to edit the first lines in the code to specify a command for the timeout and the solver itself:
+
+\begin{verbatim}
+timeout_command = "timeout"                     # Could be blank
+solver_command = "solve-field"
+\end{verbatim}
+
+If the timeout command is set to blank then no timer will be used to run the solver. Otherwise, the default timeout is set to 60 s. Another benefit of using a local solver is that once the image is solved, \textsc{MetroPSF} will create a WCS file that will be loaded automatically when the image is opened. More information on how to download and install the Astrometry.net solver is available at \url{http://astrometry.net/doc/readme.html} and \citet{2010AJ....139.1782L}. 
+
 
 \subsubsection{Get Comparison Stars}
 Retreives a list of stars in the field of view from the catalog specified in the Comparison Catalog in the right panel. By default the AAVSO Photometric All Sky Survey (APASS) DR9 catalog \citep{2015AAS...22533616H} is used. \textsc{MetroPSF} can also work with the Gaia DR2 \citep{2018A&A...616A...1G}, the First U.S. Naval Observatory Robotic Astrometric Telescope URAT1 \citep{2015AJ....150..101Z} and the USNO-B1.0 catalogs \citep{2003AJ....125..984M}. It is also possible to specify a custom VizieR catalog\footnote{A list of catalogs in VizieR can be obtained from \url{http://cdsarc.u-strasbg.fr/cats/cats.html}} by selecting VizieR Catalog in the Comparison Catalog setting. For example, for The SDSS Photometric Catalog, Release 8 \citep{2011yCat.2306....0A}, enter ``II/306'' in the Vizier Catalog Number input field. It is assumed that VizieR provides coordinates via RAJ2000 and DEJ2000 columns in custom catalogs.
 
 Sources found in the originial data with catalog matches are shown in green, and those without matches, in grey. The matching radius used in this procedure is set in the left panel, by default set to 2\arcsec. Note that \textsc{MetroPSF} searches for catalog magnitudes using the filter string specified in the CCD Filter setting in the left panel. For example, with ``V'' as the input, \textsc{MetroPSF} will search for ``Vmag'' in the VizieR catalog. The CCD Filter setting is pre-filled automatically when the FITS file is loaded, but if the filter information is inaccurate or not present it is possible to specify the filter manually.
+
+\subsubsection{Get SkyBoT Objects}
+Identifies solar system bodies in the image via SkyBoT service. The matching radius is specified in the SkyBoT Matching Radius setting. 
 
 \subsubsection{Find Regression Model}
 With photometry table containing magnitudes from a matching catalog, it is now possible to do a linear regression fit to derive conversion parameters between instrumental and differential magnitudes. The minimum and maximum ensemble magnitudes are specified in the corresponding settings in the left panel. 
@@ -299,9 +312,19 @@ $ python metropsf.py -i \
 Note that file names with spaces should be specified using quote marks. On execution with the \texttt{-r} flag the program loads the settings file first and then proceeds to the report generation, as described in \S \ref{batch}. After reports are generated the program quits. All console messages are saved in the log file.
 
 \section {Acknowledgement} 
-Thanks to Cliff Kotnik from AAVSO for contributing code and ideas.
+The author is thankful to Cliff Kotnik from AAVSO for contributing code and ideas, and Paul Leyland from BAA for helping to rewrite for modern \textsc{photutils} and keep the code alive.
 
 \section{Change Log}
+
+\subsection{Version 0.17}
+\begin{itemize}
+ 	\item Code rewritten to be compatible with \textsc{photutils 1.13}. Switched from deprecated Pandas appends to concats. Also working with the updated VizieR region query function in \textsc{AstroPy} -- thanks to Paul Leyland.
+	\item Now working with local Astrometry.net solver (see beginning of the source code for solver and timeout command settings.)
+	\item SkyBoT integration. 
+	\item Added Gaia DR3 to comparison catalogs.
+	\item Local solver will create a WCS file that will be loaded automatically when the image is opened.
+	\item Save/Load settings bugfixes.
+\end{itemize}
 
 \subsection{Version 0.16}
 \begin{itemize}
@@ -323,7 +346,7 @@ Thanks to Cliff Kotnik from AAVSO for contributing code and ideas.
 \item Object name in the left panel is now automatically set from VSX catalog for matching sources.
 \item Display next VSX source.
 \item Mouse click now reports time in ISO UTC format along with photometry result.
-\item Increased Astrometry.Net default solve timeout from 120 to 360 s.
+\item Increased Astrometry.net default solve timeout from 120 to 360 s.
 \item Linear regression fit error is now based on standard deviation.
 \item \textsc{MetroPSF} now writes a log to \texttt{metropsf.log}.
 \item Astrometry.net URL and API key setting in the interface.
@@ -373,7 +396,7 @@ Thanks to Cliff Kotnik from AAVSO for contributing code and ideas.
 \end{itemize}
 
 \section{License Information}
-\textsc{MetroPSF} source code is distributed via 2-clause BSD license. Copyright \textcopyright \ 2021, Maxym Usatov. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+\textsc{MetroPSF} source code is distributed via 2-clause BSD license. Copyright \textcopyright \ 2021-2024, Maxym Usatov. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
     Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
     Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
